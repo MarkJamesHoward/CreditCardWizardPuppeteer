@@ -22,6 +22,13 @@ async function FindInterestFreePeriod() {
   return days[0];
 }
 
+async function FindAnnualFee() {
+  let html = await page.content();
+  let data = html.match(/\$\d{3}\sp/g);
+  let fee = data[0].match(/\d{3}/g);
+  return fee[0];
+}
+
 async function CreateContentfulClient() {
   let client = contentful.createClient({
     accessToken: "CFPAT-yiIVze4OCenMTsRn9blrU_OYZE1pjQM0L_FoyUeeXPU",
@@ -46,6 +53,8 @@ async function Start() {
   page = await browser.newPage();
 
   await CreateContentfulClient();
+
+  console.log("updating ANZ Airpoints platinum visa");
 
   // Get the Purchase Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumPurchaseRate = await ReadValue(
@@ -80,6 +89,13 @@ async function Start() {
     ANZAirpointsVisaPlatinumID,
     "interestFreePeriod",
     await FindInterestFreePeriod()
+  );
+
+  // Update the Primary Fee in contentful
+  await updateItem(
+    ANZAirpointsVisaPlatinumID,
+    "feePrimary",
+    await FindAnnualFee()
   );
 
   let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
