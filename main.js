@@ -19,7 +19,6 @@ async function FindInterestFreePeriod() {
   let html = await page.content();
   let data = html.match(/Up to \d\d days/g);
   let days = data[0].match(/\d\d/g);
-  console.log(days);
   return days[0];
 }
 
@@ -39,7 +38,7 @@ async function updateItem(itemID, field, newValue) {
   await entry.update();
   let newVersion = await await env.getEntry(itemID);
   await newVersion.publish();
-  console.log(`updated ${field} to ${value}`);
+  console.log(`updated ${field} to ${newValue}`);
 }
 
 async function Start() {
@@ -47,13 +46,6 @@ async function Start() {
   page = await browser.newPage();
 
   await CreateContentfulClient();
-
-  // Update the interest Free days in contentful
-  await updateItem(
-    ANZAirpointsVisaPlatinumID,
-    "interestFreePeriod",
-    await FindInterestFreePeriod()
-  );
 
   // Get the Purchase Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumPurchaseRate = await ReadValue(
@@ -81,6 +73,13 @@ async function Start() {
     "5wMSD9hoHiFyUBmxGkGz4X",
     "cashAdvanceRate",
     Strip(ANZAirpointsVisaPlatinumCashRate, "cashRate")
+  );
+
+  // Update the interest Free days in contentful
+  await updateItem(
+    ANZAirpointsVisaPlatinumID,
+    "interestFreePeriod",
+    await FindInterestFreePeriod()
   );
 
   let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
@@ -116,7 +115,6 @@ async function Start() {
 
 async function ReadValue(url, attr, item) {
   await page.goto(url);
-  console.log(url, attr);
 
   const [data] = await page.evaluate((attrsel) => {
     return [
@@ -124,12 +122,9 @@ async function ReadValue(url, attr, item) {
     ].map((elem) => elem.innerText);
   }, attr);
 
-  console.log(data);
-
   return { [item]: data };
-
-  console.log("completed");
 }
+
 function Strip(val, field) {
   let regex = /\d{2}.\d{2}/g;
   let data = val[field];
@@ -139,7 +134,6 @@ function Strip(val, field) {
 
 async function ReadTitleValue(url, attr, item) {
   await page.goto(url);
-  console.log(url, attr);
 
   const [data] = await page.evaluate((attrsel) => {
     return [...document.querySelectorAll(".hero__heading")].map(
@@ -147,9 +141,5 @@ async function ReadTitleValue(url, attr, item) {
     );
   }, attr);
 
-  console.log(data);
-
   return { [item]: data };
-
-  console.log("completed");
 }
