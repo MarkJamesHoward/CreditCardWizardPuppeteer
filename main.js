@@ -1,18 +1,59 @@
 const puppeteer = require("puppeteer");
+const contentful = require("contentful-management");
+
+const ANZAirpointsVisaPlatinumID = "5wMSD9hoHiFyUBmxGkGz4X";
 
 console.log("start");
 
 let browser;
 let page;
 
+let env;
+
 Start().then(() => {
   console.log("all done");
   browser.close();
 });
 
+async function FindInterestFreePeriod() {
+  let html = await page.content();
+  let data = html.match(/Up to \d\d days/g);
+  let days = data[0].match(/\d\d/g);
+  console.log(days);
+  return days[0];
+}
+
+async function CreateContentfulClient() {
+  let client = contentful.createClient({
+    accessToken: "CFPAT-yiIVze4OCenMTsRn9blrU_OYZE1pjQM0L_FoyUeeXPU",
+  });
+
+  let space = await client.getSpace("8rzf9c6imdg0");
+
+  env = await space.getEnvironment("master");
+}
+
+async function updateItem(itemID, field, newValue) {
+  let entry = await env.getEntry(itemID);
+  entry.fields[field] = { "en-US": parseFloat(newValue) };
+  await entry.update();
+  let newVersion = await await env.getEntry(itemID);
+  await newVersion.publish();
+  console.log(`updated ${field} to ${value}`);
+}
+
 async function Start() {
   browser = await puppeteer.launch();
   page = await browser.newPage();
+
+  await CreateContentfulClient();
+
+  // Update the interest Free days in contentful
+  await updateItem(
+    ANZAirpointsVisaPlatinumID,
+    "interestFreePeriod",
+    await FindInterestFreePeriod()
+  );
 
   // Get the Purchase Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumPurchaseRate = await ReadValue(
@@ -21,10 +62,25 @@ async function Start() {
     "purchaseRate"
   );
 
+  //Now update this in contentful
+  await updateItem(
+    ANZAirpointsVisaPlatinumID,
+    "purchasesRate",
+    Strip(ANZAirpointsVisaPlatinumPurchaseRate, "purchaseRate")
+  );
+
+  // Get the Cash Advance Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumCashRate = await ReadValue(
     "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
     "NZAPPC",
     "cashRate"
+  );
+
+  // Now update this in contentful
+  await updateItem(
+    "5wMSD9hoHiFyUBmxGkGz4X",
+    "cashAdvanceRate",
+    Strip(ANZAirpointsVisaPlatinumCashRate, "cashRate")
   );
 
   let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
@@ -41,24 +97,21 @@ async function Start() {
 
   let AnzLowRatePurchaseRate = await ReadValue(
     "https://www.anz.co.nz/personal/credit-cards/low-rate-visa/",
-    "NZLIVC",
+    "NZLIVP",
     "purchaseRate"
   );
   let AnzLowRateCashRate = await ReadValue(
     "https://www.anz.co.nz/personal/credit-cards/low-rate-visa/",
-    "NZLIVP",
+    "NZLIVC",
     "cashRate"
   );
 
-  console.log("ANZ Low Rate Visa");
-  console.log(ANZLowRateTitle);
-  console.log(AnzLowRatePurchaseRate);
-  console.log(AnzLowRateCashRate);
-
-  console.log("ANZ Airpoints Visa Platinum");
-  console.log(ANZAirpointsVisaPlatinumTitle);
-  console.log(ANZAirpointsVisaPlatinumPurchaseRate);
-  console.log(ANZAirpointsVisaPlatinumCashRate);
+  var newObj = Object.assign(
+    {},
+    ANZLowRateTitle,
+    AnzLowRatePurchaseRate,
+    AnzLowRateCashRate
+  );
 }
 
 async function ReadValue(url, attr, item) {
@@ -77,6 +130,12 @@ async function ReadValue(url, attr, item) {
 
   console.log("completed");
 }
+function Strip(val, field) {
+  let regex = /\d{2}.\d{2}/g;
+  let data = val[field];
+  let res = data.match(regex);
+  return res;
+}
 
 async function ReadTitleValue(url, attr, item) {
   await page.goto(url);
@@ -93,16 +152,4 @@ async function ReadTitleValue(url, attr, item) {
   return { [item]: data };
 
   console.log("completed");
-}
-
-async function SaveJSonFile() {
-  const fs = require("fs").promises;
-
-  const data = "Hello my name is Hugo, I'm using the new fs promises API";
-
-  try {
-    await fs.writeFile("ANZ.json", data); // need to be in an async function
-  } catch (error) {
-    console.log(error);
-  }
 }
