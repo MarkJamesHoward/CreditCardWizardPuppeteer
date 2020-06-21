@@ -1,7 +1,14 @@
 const puppeteer = require("puppeteer");
 const contentful = require("contentful-management");
 
+const ANZAirpointVisaPlatinumURL = "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/";
 const ANZAirpointsVisaPlatinumID = "5wMSD9hoHiFyUBmxGkGz4X";
+
+const ANZLowRateURL ="https://www.anz.co.nz/personal/credit-cards/low-rate-visa/";
+const ANZLowRateVisa = "3jcAsqgU5MmsbUVtCLoxT4";
+
+const ANZAirpointsVisaURL = 'https://www.anz.co.nz/personal/credit-cards/airpoints-visa/';
+const ANZAirpointsVisaID = '7u38SKPZoZmFIyIHtG3QfT';
 
 console.log("start");
 
@@ -24,8 +31,8 @@ async function FindInterestFreePeriod() {
 
 async function FindAnnualFee() {
   let html = await page.content();
-  let data = html.match(/\$\d{3}\sp/g);
-  let fee = data[0].match(/\d{3}/g);
+  let data = html.match(/\$\d{2,3}\sp/g);
+  let fee = data[0].match(/\d{2,3}/g);
   return fee[0];
 }
 
@@ -48,17 +55,55 @@ async function updateItem(itemID, field, newValue) {
   console.log(`updated ${field} to ${newValue}`);
 }
 
-async function Start() {
-  browser = await puppeteer.launch();
-  page = await browser.newPage();
+async function UpdateANZLowRateVisa() {
+  console.log("ANZ Low Rate Visa")
+  
 
-  await CreateContentfulClient();
+  // Get the Cash Advance Rate for ANZ Low Rate Visa
+  let ANZLowRateCashRate = await ReadValue(
+    ANZLowRateURL,
+    "NZLIVC",
+    "cashRate"
+  );
 
+
+  // Now update this in contentful
+  await updateItem(
+    ANZLowRateVisa,
+    "cashAdvanceRate",
+    Strip(ANZLowRateCashRate, "cashRate")
+  );
+
+   // Get the Purchase Advance Rate for ANZ Low Rate Visa
+   let ANZLowRatePurchaseRate = await ReadValue(
+    ANZLowRateURL,
+    "NZLIVP",
+    "purchaseRate"
+  );
+
+
+  // Now update this in contentful
+  await updateItem(
+    ANZLowRateVisa,
+    "purchasesRate",
+    Strip(ANZLowRatePurchaseRate, "purchaseRate")
+  );
+  
+
+   // Update the interest Free days in contentful
+   await updateItem(
+    ANZLowRateVisa,
+    "interestFreePeriod",
+    await FindInterestFreePeriod()
+  );
+}
+
+async function UpdateANZAirpointsVisaPlatinum() {
   console.log("updating ANZ Airpoints platinum visa");
 
   // Get the Purchase Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumPurchaseRate = await ReadValue(
-    "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
+    ANZAirpointVisaPlatinumURL,
     "NZAPPP",
     "purchaseRate"
   );
@@ -72,14 +117,14 @@ async function Start() {
 
   // Get the Cash Advance Rate for ANZ Airpoints platinum visa
   let ANZAirpointsVisaPlatinumCashRate = await ReadValue(
-    "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
+    ANZAirpointVisaPlatinumURL,
     "NZAPPC",
     "cashRate"
   );
 
   // Now update this in contentful
   await updateItem(
-    "5wMSD9hoHiFyUBmxGkGz4X",
+    ANZAirpointsVisaPlatinumID,
     "cashAdvanceRate",
     Strip(ANZAirpointsVisaPlatinumCashRate, "cashRate")
   );
@@ -97,36 +142,75 @@ async function Start() {
     "feePrimary",
     await FindAnnualFee()
   );
+}
 
-  let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
-    "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
-    "",
-    "Title"
-  );
+async function UpdateANZAirpointsVisa() {
+  console.log("updating ANZ Airpoints visa");
 
-  let ANZLowRateTitle = await ReadTitleValue(
-    "https://www.anz.co.nz/personal/credit-cards/low-rate-visa/",
-    "",
-    "Title"
-  );
-
-  let AnzLowRatePurchaseRate = await ReadValue(
-    "https://www.anz.co.nz/personal/credit-cards/low-rate-visa/",
-    "NZLIVP",
+  // Get the Purchase Rate for ANZ Airpoints visa
+  let ANZAirpointsVisaPurchaseRate = await ReadValue(
+    ANZAirpointsVisaURL,
+    "NZAPCP",
     "purchaseRate"
   );
-  let AnzLowRateCashRate = await ReadValue(
-    "https://www.anz.co.nz/personal/credit-cards/low-rate-visa/",
-    "NZLIVC",
+
+  //Now update this in contentful
+  await updateItem(
+    ANZAirpointsVisaID,
+    "purchasesRate",
+    Strip(ANZAirpointsVisaPurchaseRate, "purchaseRate")
+  );
+
+  // Get the Cash Advance Rate for ANZ Airpoints visa
+  let ANZAirpointsVisaCashRate = await ReadValue(
+    ANZAirpointsVisaURL,
+    "NZAPCC",
     "cashRate"
   );
 
-  var newObj = Object.assign(
-    {},
-    ANZLowRateTitle,
-    AnzLowRatePurchaseRate,
-    AnzLowRateCashRate
+  // Now update this in contentful
+  await updateItem(
+    ANZAirpointsVisaID,
+    "cashAdvanceRate",
+    Strip(ANZAirpointsVisaCashRate, "cashRate")
   );
+
+  // Update the interest Free days in contentful
+  await updateItem(
+    ANZAirpointsVisaID,
+    "interestFreePeriod",
+    await FindInterestFreePeriod()
+  );
+
+  // Update the Primary Fee in contentful
+  await updateItem(
+    ANZAirpointsVisaID,
+    "feePrimary",
+    await FindAnnualFee()
+  );
+}
+
+async function Start() {
+  browser = await puppeteer.launch();
+  page = await browser.newPage();
+
+  await CreateContentfulClient();
+
+  
+  await UpdateANZAirpointsVisaPlatinum();
+  console.log("----------------------------------------")
+  await UpdateANZLowRateVisa();
+  console.log("----------------------------------------")
+  await UpdateANZAirpointsVisa();
+
+
+
+  // let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
+  //   "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
+  //   "",
+  //   "Title"
+  // );
+ 
 }
 
 async function ReadValue(url, attr, item) {
