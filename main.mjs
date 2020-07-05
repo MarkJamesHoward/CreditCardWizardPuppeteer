@@ -1,7 +1,5 @@
 import {
-  UpdateWestpacAirpointsPlatinumMastercard,
-  UpdateWestpacAirpointsMastercard,
-  UpdateWestpacAirpointsWorldMastercard,
+  UpdateWestpac,
   FindWestPacCashRate,
   FindWestPacPurchaseRate,
 } from "./westpac.mjs";
@@ -13,6 +11,8 @@ import {
   UpdateANZCashbackVisaPlatinum,
   UpdateANZAirpointsVisa,
 } from "./ANZ.mjs";
+
+import * as URL from "./URLs.mjs";
 
 import puppeteer from "puppeteer";
 import contentful from "contentful-management";
@@ -46,13 +46,57 @@ async function Start() {
   await CreateContentfulClient();
   console.log("Logged in successfully");
 
+  console.log("--WESTPAC-------------------------------");
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacLowRateMastercardURL,
+    URL.WestpacLowRateMastercardID
+  );
   console.log("----------------------------------------");
-  await UpdateWestpacAirpointsPlatinumMastercard(page, env);
+
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacHotpointsWorldMastercardURL,
+    URL.WestpacHotpointsWorldMastercardID
+  );
   console.log("----------------------------------------");
-  await UpdateWestpacAirpointsMastercard(page, env);
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacHotpointsPlatinumMastercardURL,
+    URL.WestpacHotpointsPlatinumMastercardID
+  );
   console.log("----------------------------------------");
-  await UpdateWestpacAirpointsWorldMastercard(page, env);
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacHotpointsMastercardURL,
+    URL.WestpacHotpointsMastercardID
+  );
   console.log("----------------------------------------");
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacAirpointsPlatinumMastercardURL,
+    URL.WestpacAirpointsPlatinumMastercardID
+  );
+  console.log("----------------------------------------");
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacAirpointsMastercardURL,
+    URL.WestpacAirpointsMastercardID
+  );
+  console.log("----------------------------------------");
+  await UpdateWestpac(
+    page,
+    env,
+    URL.WestpacAirpointsWorldMastercardURL,
+    URL.WestpacAirpointsWorldMastercardID
+  );
+  console.log("--ANZ-----------------------------------");
   await UpdateANZCashbackVisaPlatinum(page, env);
   console.log("----------------------------------------");
   await UpdateANZCashbackVisa(page, env);
