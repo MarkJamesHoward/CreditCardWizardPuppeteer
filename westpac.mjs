@@ -6,165 +6,41 @@ import {
   FindInterestFreePeriodWestpac,
 } from "./regexclean.mjs";
 import { updateItem } from "./contentful.mjs";
+import * as URL from "./URLs.mjs";
 
-const WestpacAirpointsMastercardURL =
-  "https://www.westpac.co.nz/credit-cards/airpoints/airpoints-mastercard/";
-const WestpacAirpointsMastercardID = "6QytVSylDciSRatyhcJ9gU";
 
-const WestpacAirpointsWorldMastercardURL =
-  "https://www.westpac.co.nz/credit-cards/airpoints/airpoints-world-mastercard/";
-const WestpacAirpointsWorldMastercardID = "2ZGbp1kxwuVP2yLcnpfccZ";
-
-const WestpacAirpointsPlatinumMastercardURL =
-  "https://www.westpac.co.nz/credit-cards/airpoints/airpoints-platinum-mastercard/";
-const WestpacAirpointsPlatinumMastercardID = "4xLghP5t0WI7Z3IEo3Kdgd";
-
-export async function UpdateWestpacAirpointsPlatinumMastercard(page, env) {
-  console.log("updating Westpac Airpoints Platinum Mastercard");
-  let rate = await FindWestPacPurchaseRate(
-    WestpacAirpointsPlatinumMastercardURL,
-    page
-  );
+export async function UpdateWestpac(page, env, url, contentfulid) {
+  console.log(`updating ${url}`);
+  let rate = await FindWestPacPurchaseRate(url, page);
 
   if (CheckRateValid()) {
     let plainRate = PlainStrip(rate);
-    await updateItem(
-      env,
-      WestpacAirpointsPlatinumMastercardID,
-      "purchasesRate",
-      plainRate
-    );
+    await updateItem(env, contentfulid, "purchasesRate", plainRate);
   }
 
-  let cash = await FindWestPacCashRate(
-    WestpacAirpointsPlatinumMastercardURL,
-    page
-  );
+  let cash = await FindWestPacCashRate(url, page);
 
   if (CheckRateValid()) {
     let plainRate = PlainStrip(cash);
-    await updateItem(
-      env,
-      WestpacAirpointsPlatinumMastercardID,
-      "cashAdvanceRate",
-      plainRate
-    );
+    await updateItem(env, contentfulid, "cashAdvanceRate", plainRate);
   }
+  let fee = 0;
 
-  let fee = await FindWestPacAnnualFee(
-    WestpacAirpointsPlatinumMastercardURL,
-    page
-  );
+  if (url === URL.WestpacLowRateMastercardURL) {
+    fee = "0";
+  }
+  else {
+    fee = await FindWestPacAnnualFee(url, page);
+  }
 
   if (CheckRateValid()) {
     let plainfee = WestpacAnnualFeeStrip(fee);
-    await updateItem(
-      env,
-      WestpacAirpointsPlatinumMastercardID,
-      "feePrimary",
-      plainfee
-    );
+    await updateItem(env, contentfulid, "feePrimary", plainfee);
   }
 
   await updateItem(
     env,
-    WestpacAirpointsPlatinumMastercardID,
-    "interestFreePeriod",
-    await FindInterestFreePeriodWestpac(page)
-  );
-}
-
-export async function UpdateWestpacAirpointsMastercard(page, env) {
-  console.log("updating Westpac Airpoints Mastercard");
-  let rate = await FindWestPacPurchaseRate(WestpacAirpointsMastercardURL, page);
-
-  if (CheckRateValid()) {
-    let plainRate = PlainStrip(rate);
-    await updateItem(
-      env,
-      WestpacAirpointsMastercardID,
-      "purchasesRate",
-      plainRate
-    );
-  }
-
-  let cash = await FindWestPacCashRate(WestpacAirpointsMastercardURL, page);
-
-  if (CheckRateValid()) {
-    let plainRate = PlainStrip(cash);
-    await updateItem(
-      env,
-      WestpacAirpointsMastercardID,
-      "cashAdvanceRate",
-      plainRate
-    );
-  }
-
-  let fee = await FindWestPacAnnualFee(WestpacAirpointsMastercardURL, page);
-
-  if (CheckRateValid()) {
-    let plainfee = WestpacAnnualFeeStrip(fee);
-    await updateItem(env, WestpacAirpointsMastercardID, "feePrimary", plainfee);
-  }
-
-  await updateItem(
-    env,
-    WestpacAirpointsMastercardID,
-    "interestFreePeriod",
-    await FindInterestFreePeriodWestpac(page)
-  );
-}
-
-export async function UpdateWestpacAirpointsWorldMastercard(page, env) {
-  console.log("updating Westpac Airpoints World Mastercard");
-  let rate = await FindWestPacPurchaseRate(
-    WestpacAirpointsWorldMastercardURL,
-    page
-  );
-
-  if (CheckRateValid()) {
-    let plainRate = PlainStrip(rate);
-    await updateItem(
-      env,
-      WestpacAirpointsWorldMastercardID,
-      "purchasesRate",
-      plainRate
-    );
-  }
-
-  let cash = await FindWestPacCashRate(
-    WestpacAirpointsWorldMastercardURL,
-    page
-  );
-
-  if (CheckRateValid()) {
-    let plainRate = PlainStrip(cash);
-    await updateItem(
-      env,
-      WestpacAirpointsWorldMastercardID,
-      "cashAdvanceRate",
-      plainRate
-    );
-  }
-
-  let fee = await FindWestPacAnnualFee(
-    WestpacAirpointsWorldMastercardURL,
-    page
-  );
-
-  if (CheckRateValid()) {
-    let plainfee = WestpacAnnualFeeStrip(fee);
-    await updateItem(
-      env,
-      WestpacAirpointsWorldMastercardID,
-      "feePrimary",
-      plainfee
-    );
-  }
-
-  await updateItem(
-    env,
-    WestpacAirpointsWorldMastercardID,
+    contentfulid,
     "interestFreePeriod",
     await FindInterestFreePeriodWestpac(page)
   );

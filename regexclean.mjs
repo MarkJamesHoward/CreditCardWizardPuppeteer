@@ -18,8 +18,10 @@ export function PlainStripDays(val) {
 }
 
 export function WestpacAnnualFeeStrip(val) {
-  let data = val.match(/\$\d{2,3}/g);
-  let fee = data[0].match(/\d{2,3}/g);
+  if (val == 0) return "0";
+
+  let data = val.match(/\$\d{2,3}/g) ?? "0" ;
+  let fee = data[0].match(/\d{2,3}/g) ?? "0";
   return fee[0];
 }
 
