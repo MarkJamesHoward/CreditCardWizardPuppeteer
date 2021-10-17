@@ -174,20 +174,19 @@ export async function FindWestPacCashRate(url, page) {
   await page.goto(url);
   const content = await page.content();
   const $ = cheerio.load(content);
-  let node = $("td:contains('Cash advance rate')");
+  let node = $("td:contains('Cash advance rate').charge-table__cell");
   let data = node.next("td");
-  let data1 = data.children("span");
-  return data1.text();
+  return data.text();
 }
 
 export async function FindWestPacPurchaseRate(url, page) {
   await page.goto(url);
   const content = await page.content();
   const $ = cheerio.load(content);
-  let node = $("td:contains('Purchases')");
+  let node = $("td:contains('Purchases (and other fees & charges)').charge-table__cell");
+
   let data = node.next("td");
-  let data1 = data.children("span");
-  return data1.text();
+  return data.text();
 }
 
 export async function FindWestPacAnnualFee(url, page) {
@@ -195,6 +194,6 @@ export async function FindWestPacAnnualFee(url, page) {
   const content = await page.content();
   const $ = cheerio.load(content);
   let node = $("td:contains('Annual account fee')");
-  let data = node.next("td:contains('per year')");
+  let data = node.next("td");
   return data.text();
 }

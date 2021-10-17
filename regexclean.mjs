@@ -11,15 +11,21 @@ export function PlainStrip(val) {
   return res;
 }
 
+export function PlainStripDays(val) {
+  let regex = /\d{2}/g;
+  let res = val.match(regex);
+  return res;
+}
+
 export function WestpacAnnualFeeStrip(val) {
-  let data = val.match(/\$\d{2,3}\sp/g);
+  let data = val.match(/\$\d{2,3}/g);
   let fee = data[0].match(/\d{2,3}/g);
   return fee[0];
 }
 
 export async function FindInterestFreePeriodWestpac(page) {
   let html = await page.content();
-  let data = html.match(/up to \d{2,3} days interest/g);
+  let data = html.match(/[Uu]p to \d{2,3} days interest/g);
   let days = data[0].match(/\d\d/g);
   return days[0];
 }

@@ -1,13 +1,24 @@
 import { CheckRateValid } from "./validations.mjs";
-import { PlainStrip, Strip } from "./regexclean.mjs";
+import { PlainStrip, Strip, PlainStripDays } from "./regexclean.mjs";
 import { updateItem } from "./contentful.mjs";
 import * as URL from "./URLs.mjs";
+import cheerio from "cheerio";
 
 async function FindInterestFreePeriod(page) {
   let html = await page.content();
-  let data = html.match(/Up to \d\d days/g);
+  //OLD let data = html.match(/Up to \d\d days/g);
+  let data = html.match(/Up to/);
   let days = data[0].match(/\d\d/g);
   return days[0];
+}
+
+async function FindInterestFreePeriodTechnique2(url, page) {
+  await page.goto(url);
+  const content = await page.content();
+  const $ = cheerio.load(content);
+  let node = $("p:contains('Up to')");
+  let data = node.children("b");
+  return data.text();
 }
 
 async function FindAnnualFee(page) {
@@ -57,7 +68,7 @@ export async function UpdateANZLowRateVisa(page, env) {
     env,
     URL.ANZLowRateVisa,
     "interestFreePeriod",
-    await FindInterestFreePeriod(page)
+    await FindInterestFreePeriodTechnique2(URL.ANZLowRateURL,page)
   );
 }
 
@@ -101,7 +112,7 @@ export async function UpdateANZAirpointsVisaPlatinum(page, env) {
     env,
     URL.ANZAirpointsVisaPlatinumID,
     "interestFreePeriod",
-    await FindInterestFreePeriod(page)
+    await FindInterestFreePeriodTechnique2(URL.ANZAirpointVisaPlatinumURL, page)
   );
 
   // Update the Primary Fee in contentful
@@ -153,7 +164,7 @@ export async function UpdateANZCashbackVisa(page, env) {
     env,
     URL.ANZCashbackVisaID,
     "interestFreePeriod",
-    await FindInterestFreePeriod(page)
+    await FindInterestFreePeriodTechnique2(URL.ANZCashbackVisaURL, page)
   );
 
   // Update the Primary Fee in contentful
@@ -205,7 +216,7 @@ export async function UpdateANZCashbackVisaPlatinum(page, env) {
     env,
     URL.ANZCashbackVisaPlatinumID,
     "interestFreePeriod",
-    await FindInterestFreePeriod(page)
+    await PlainStripDays(await FindInterestFreePeriodTechnique2(URL.ANZCashbackVisaPlatinumURL, page))
   );
 
   // Update the Primary Fee in contentful
@@ -257,7 +268,7 @@ export async function UpdateANZAirpointsVisa(page, env) {
     env,
     URL.ANZAirpointsVisaID,
     "interestFreePeriod",
-    await FindInterestFreePeriod(page)
+    await FindInterestFreePeriodTechnique2(URL.ANZAirpointsVisaURL, page)
   );
 
   // Update the Primary Fee in contentful
@@ -274,7 +285,7 @@ async function ReadValue(page, url, attr, item) {
 
   const [data] = await page.evaluate((attrsel) => {
     return [
-      ...document.querySelectorAll(`[data-baserate-code='${attrsel}']`),
+      ...document.querySelectorAll(`[data-code='${attrsel}']`),
     ].map((elem) => elem.innerText);
   }, attr);
 

@@ -46,13 +46,6 @@ async function Start() {
   await CreateContentfulClient();
   console.log("Logged in successfully");
 
-  console.log("----------------------------------------");
-  await UpdateWestpacAirpointsPlatinumMastercard(page, env);
-  console.log("----------------------------------------");
-  await UpdateWestpacAirpointsMastercard(page, env);
-  console.log("----------------------------------------");
-  await UpdateWestpacAirpointsWorldMastercard(page, env);
-  console.log("----------------------------------------");
   await UpdateANZCashbackVisaPlatinum(page, env);
   console.log("----------------------------------------");
   await UpdateANZCashbackVisa(page, env);
@@ -62,6 +55,15 @@ async function Start() {
   await UpdateANZLowRateVisa(page, env);
   console.log("----------------------------------------");
   await UpdateANZAirpointsVisa(page, env);
+
+  console.log("----------------------------------------");
+  await UpdateWestpacAirpointsPlatinumMastercard(page, env);
+  console.log("----------------------------------------");
+  await UpdateWestpacAirpointsMastercard(page, env);
+  console.log("----------------------------------------");
+  await UpdateWestpacAirpointsWorldMastercard(page, env);
+  console.log("----------------------------------------");
+  
 
   // let ANZAirpointsVisaPlatinumTitle = await ReadTitleValue(
   //   "https://www.anz.co.nz/personal/credit-cards/airpoints-visa-platinum/",
